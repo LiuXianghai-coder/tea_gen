@@ -12,5 +12,6 @@ gen/**
 *.iws
 .gradletasknamecache
 .gradle/
+gradle/
 build/
 bin/
