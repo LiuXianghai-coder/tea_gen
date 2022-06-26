@@ -14,11 +14,21 @@ public class PropertiesEntity {
 
     private final String daType;
 
-    public PropertiesEntity(
+    private final String mapperDir;
+
+    private final String entityDir;
+
+    private final String xmlDir;
+
+    private final String baseDir;
+
+    private PropertiesEntity(
             String url, String userName,
             String password, String dbName,
             String tableName, String filePath,
-            String daType
+            String daType, String mapperDir,
+            String entityDir, String xmlDir,
+            String baseDir
     ) {
         this.url = url;
         this.userName = userName;
@@ -27,6 +37,26 @@ public class PropertiesEntity {
         this.tableName = tableName;
         this.filePath = filePath;
         this.daType = daType;
+        this.mapperDir = mapperDir;
+        this.entityDir = entityDir;
+        this.xmlDir = xmlDir;
+        this.baseDir = baseDir;
+    }
+
+    public String getDaType() {
+        return daType;
+    }
+
+    public String getMapperDir() {
+        return mapperDir;
+    }
+
+    public String getEntityDir() {
+        return entityDir;
+    }
+
+    public String getXmlDir() {
+        return xmlDir;
     }
 
     public String getUrl() {
@@ -53,6 +83,9 @@ public class PropertiesEntity {
         return filePath;
     }
 
+    public String getBaseDir() {
+        return baseDir;
+    }
 
     public static final class Builder {
         private String url;
@@ -62,6 +95,10 @@ public class PropertiesEntity {
         private String tableName;
         private String filePath;
         private String daType;
+        private String mapperDir;
+        private String entityDir;
+        private String xmlDir;
+        private String baseDir;
 
         private Builder() {
         }
@@ -105,8 +142,28 @@ public class PropertiesEntity {
             return this;
         }
 
+        public Builder withMapperDir(String mapperDir) {
+            this.mapperDir = mapperDir;
+            return this;
+        }
+
+        public Builder withEntityDir(String entityDir) {
+            this.entityDir = entityDir;
+            return this;
+        }
+
+        public Builder withXmlDir(String xmlDir) {
+            this.xmlDir = xmlDir;
+            return this;
+        }
+
+        public Builder withBaseDir(String baseDir) {
+            this.baseDir = baseDir;
+            return this;
+        }
+
         public PropertiesEntity build() {
-            return new PropertiesEntity(url, userName, password, dbName, tableName, filePath, daType);
+            return new PropertiesEntity(url, userName, password, dbName, tableName, filePath, daType, mapperDir, entityDir, xmlDir, baseDir);
         }
     }
 }

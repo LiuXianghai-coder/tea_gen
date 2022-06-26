@@ -86,24 +86,4 @@ public class DataBaseTools {
             getAllField(fields, type.getSuperclass());
         return fields;
     }
-
-    public static String toCamel(String str) {
-        String[] split = str.split("_");
-        StringBuilder ans = new StringBuilder();
-        for (int i = 0; i < split.length; i++) {
-            if (i == 0) ans.append(split[i].toLowerCase());
-            else {
-                String first = split[i].substring(0, 1);
-                String nxt = split[i].toLowerCase().substring(1);
-                ans.append(first.toUpperCase()).append(nxt);
-            }
-        }
-
-        return ans.toString();
-    }
-
-    public static String toClassName(String str) {
-        String ans = toCamel(str);
-        return ans.substring(0, 1).toUpperCase() + ans.substring(1);
-    }
 }

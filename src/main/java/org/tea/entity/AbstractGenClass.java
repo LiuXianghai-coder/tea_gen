@@ -4,6 +4,8 @@ import org.tea.tool.DataBaseTools;
 
 import java.util.List;
 
+import static org.tea.tool.ConstTools.*;
+
 /**
  * @author lxh
  * @date 2022/6/5-下午9:44
@@ -19,7 +21,7 @@ public abstract class AbstractGenClass {
                 .append("\n\n")
                 .append("import javax.persistence.*;\n\n")
                 .append("public class ")
-                .append(DataBaseTools.toClassName(tableName))
+                .append(toClassName(tableName))
                 .append(" { \n");
 
         return ans.toString();
@@ -31,8 +33,7 @@ public abstract class AbstractGenClass {
                 "\t" +
                 "private " +
                 type.getSimpleName() +
-                " " +
-                DataBaseTools.toCamel(structure.getColumnName()) +
+                " " + toCamel(structure.getColumnName()) +
                 ";\n\n";
     }
 
@@ -41,19 +42,16 @@ public abstract class AbstractGenClass {
                 structure.getColumnName() + "\" " +
                 "jdbcType=\"" + jdbcType + "\"" +
                 " property=\"" +
-                DataBaseTools.toCamel(structure.getColumnName()) +
+                toCamel(structure.getColumnName()) +
                 "\" />\n";
     }
 
     protected String genMapperInterface(String pack, String tableName) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("package ").append(pack)
-                .append("\n\n")
-                .append("public interface ")
-                .append(DataBaseTools.toClassName(tableName))
-                .append("Mapper")
-                .append(" {\n").append("}");
-
-        return sb.toString();
+        return "package " + pack +
+                "\n\n" +
+                "public interface " +
+                toClassName(tableName) +
+                "Mapper" +
+                " {\n" + "}";
     }
 }

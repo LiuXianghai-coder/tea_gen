@@ -3,16 +3,16 @@ package org.tea.ui;
 import org.tea.domain.mysql.service.impl.MySQLGenClassService;
 import org.tea.domain.mysql.service.impl.MySQLTableInfoService;
 import org.tea.domain.mysql.service.impl.MySQLTableStructService;
-import org.tea.domain.psql.entity.PsqlTableStructure;
+import org.tea.domain.psql.service.impl.PsqlGenClassService;
+import org.tea.domain.psql.service.impl.PsqlTableInfoService;
+import org.tea.domain.psql.service.impl.PsqlTableStructService;
+import org.tea.entity.PropertiesEntity;
 import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
 import org.tea.service.GenClassService;
 import org.tea.service.TableInfoService;
 import org.tea.service.TableStructureService;
-import org.tea.domain.psql.service.impl.PsqlGenClassService;
-import org.tea.domain.psql.service.impl.PsqlTableInfoService;
-import org.tea.domain.psql.service.impl.PsqlTableStructService;
-import org.tea.entity.PropertiesEntity;
+import org.tea.tool.ConstTools;
 import org.tea.tool.DataBaseTools;
 import org.tea.tool.FileTools;
 
@@ -30,6 +30,8 @@ import java.util.List;
 import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 import static javax.swing.SwingConstants.LEFT;
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
+import static org.tea.tool.ConstTools.*;
+import static org.tea.tool.ConstTools.packToPath;
 
 public class BaseScreen {
     private final int PRE_LAB_WID = 10;
@@ -37,6 +39,10 @@ public class BaseScreen {
     private final int TEXT_COLS = 50;
 
     private JTextField nameField, urlField, passField, tabField, fileField;
+
+    private JTextField entityPack, mapperPack, xmlPack;
+
+    private JTextField baseDir; // 项目的基本地址
 
     private JList<String> daList;
 
@@ -77,6 +83,10 @@ public class BaseScreen {
         passField.setText(prop.getPassword());
         tabField.setText(prop.getTableName());
         fileField.setText(prop.getFilePath());
+        entityPack.setText(prop.getEntityDir());
+        xmlPack.setText(prop.getXmlDir());
+        mapperPack.setText(prop.getMapperDir());
+        baseDir.setText(prop.getBaseDir());
     }
 
     private JPanel getBottom() {
@@ -122,6 +132,10 @@ public class BaseScreen {
                 String da = daList.getSelectedValue();
                 String tabName = tabField.getText();
                 String path = fileField.getText();
+                String entityDirText = entityPack.getText();
+                String xmlDirText = xmlPack.getText();
+                String mapperDirText = mapperPack.getText();
+                String baseDirText = baseDir.getText();
 
                 TableInfoService infoService = null;
                 TableStructureService structureService = null;
@@ -139,33 +153,51 @@ public class BaseScreen {
                     throw new RuntimeException("不能处理的数据库类型");
                 }
 
+                String entityPack = pathToPack(entityDirText);
+                String mapperPack = pathToPack(mapperDirText);
+                String xmlPack = pathToPack(xmlDirText);
+                String baseDirPack = pathToPack(baseDirText);
+
                 String dbName = url.substring(url.lastIndexOf("/") + 1);
-                List<SchemaStructure> dbTables = infoService.selectAllTables(dbName);
-                for (SchemaStructure struct : dbTables) {
-                    String tab = struct.getTableName();
 
-                    List<TabStructure> structures = structureService.selectByTableName(dbName, tab);
-                    String entity = genClassService.genEntityByStruct(structures, "org.xhliu.entity");
-                    String xmlMapper = genClassService.genXmlMapperByStruct(
-                            structures,
-                            "org.xhliu.entity." + DataBaseTools.toClassName(tab),
-                            "org.xhliu.mapper.UserInfoMapper"
-                    );
-                    String mapper = genClassService.genMapperByStruct(structures, "org.xhliu.mapper");
+                generateFiles(url, user, pass, da, tabName, path,
+                        entityDirText, xmlDirText, mapperDirText,
+                        structureService, genClassService, entityPack,
+                        mapperPack, xmlPack, baseDirPack, dbName, tabName
+                );
+            }
 
-                    FileTools.writeJavaToFile(entity, path);
-                    FileTools.writeXmlMapper(xmlMapper, path);
-                    FileTools.writeJavaToFile(mapper, path);
+            private void generateFiles(
+                    String url, String user,
+                    String pass, String da, String tabName,
+                    String path, String entityDirText,
+                    String xmlDirText, String mapperDirText,
+                    TableStructureService structureService, GenClassService genClassService,
+                    String entityPack, String mapperPack, String xmlPack,
+                    String baseDirPack, String dbName, String tab
+            ) {
+                List<TabStructure> structures = structureService.selectByTableName(dbName, tab);
+                String entity = genClassService.genEntityByStruct(structures, entityPack);
+                String xmlMapper = genClassService.genXmlMapperByStruct(
+                        structures,
+                        pathToPack(entityDirText) + toClassName(tab),
+                        pathToPack(mapperDirText) + toMapperName(tab)
+                );
+                String mapper = genClassService.genMapperByStruct(structures, mapperPack);
 
-                    JOptionPane.showMessageDialog(mainFrame, "写入成功");
+                FileTools.writeJavaToFile(entity, packToPath(baseDirPack) + packToPath(entityPack));
+                FileTools.writeXmlMapper(xmlMapper, packToPath(baseDirPack) + pathToPack(xmlPack));
+                FileTools.writeJavaToFile(mapper, packToPath(baseDirPack) + packToPath(mapperPack));
 
-                    prop = PropertiesEntity.Builder.builder()
-                            .withUrl(url).withUserName(user).withPassword(pass)
-                            .withTableName(tabName).withFilePath(path)
-                            .withDaType(da)
-                            .build();
-                    FileTools.writeProperties(prop);
-                }
+                JOptionPane.showMessageDialog(mainFrame, "写入成功");
+
+                prop = PropertiesEntity.Builder.builder()
+                        .withUrl(url).withUserName(user).withPassword(pass)
+                        .withTableName(tabName).withFilePath(path)
+                        .withDaType(da).withEntityDir(entityDirText)
+                        .withXmlDir(xmlDirText).withMapperDir(mapperDirText)
+                        .build();
+                FileTools.writeProperties(prop);
             }
         });
 
@@ -187,6 +219,10 @@ public class BaseScreen {
         center.add(typePanel);
         center.add(tabPanel);
         center.add(filePanel);
+        center.add(getEntityPackPanel());
+        center.add(getMapperPackPanel());
+        center.add(getXmlPackPanel());
+        center.add(getBaseDirPanel());
 
         return center;
     }
@@ -251,6 +287,50 @@ public class BaseScreen {
         urlPanel.add(urlLabel);
         urlPanel.add(urlField);
         return urlPanel;
+    }
+
+    private JPanel getEntityPackPanel() {
+        JPanel etPackPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel etPackLabel = new JLabel("EntityPack:", LEFT);
+        entityPack = new JTextField(TEXT_COLS);
+        entityPack.addActionListener(new PasteAction(entityPack));
+
+        etPackPanel.add(etPackLabel);
+        etPackPanel.add(entityPack);
+        return etPackPanel;
+    }
+
+    private JPanel getMapperPackPanel() {
+        JPanel mapPackPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel mapPackLabel = new JLabel("MapperPack:", LEFT);
+        mapperPack = new JTextField(TEXT_COLS);
+        mapperPack.addActionListener(new PasteAction(mapperPack));
+
+        mapPackPanel.add(mapPackLabel);
+        mapPackPanel.add(mapperPack);
+        return mapPackPanel;
+    }
+
+    private JPanel getXmlPackPanel() {
+        JPanel xmlPackPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel xmlPackLabel = new JLabel("xmlPack:", LEFT);
+        xmlPack = new JTextField(TEXT_COLS);
+        xmlPack.addActionListener(new PasteAction(xmlPack));
+
+        xmlPackPanel.add(xmlPackLabel);
+        xmlPackPanel.add(xmlPack);
+        return xmlPackPanel;
+    }
+
+    private JPanel getBaseDirPanel() {
+        JPanel baseDirPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel baseDirLabel = new JLabel("BaseDir:", LEFT);
+        baseDir = new JTextField(TEXT_COLS);
+        baseDir.addActionListener(new PasteAction(baseDir));
+
+        baseDirPanel.add(baseDirLabel);
+        baseDirPanel.add(baseDir);
+        return baseDirPanel;
     }
 
     private JPanel getNamePanel() {

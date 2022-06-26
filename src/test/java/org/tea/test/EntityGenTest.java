@@ -3,6 +3,7 @@ package org.tea.test;
 import org.junit.jupiter.api.Test;
 import org.tea.domain.mysql.enums.MySQLTypeEnum;
 import org.tea.domain.psql.enums.PsqlTypeEnum;
+import org.tea.tool.ConstTools;
 import org.tea.tool.DataBaseTools;
 
 import java.sql.*;
@@ -62,7 +63,7 @@ public class EntityGenTest {
                     .append("private ")
                     .append(type.getSimpleName())
                     .append(" ")
-                    .append(DataBaseTools.toCamel(val[1]))
+                    .append(ConstTools.toCamel(val[1]))
                     .append(";\n\n");
         }
         sb.append("}");
@@ -117,7 +118,7 @@ public class EntityGenTest {
                     .append("private ")
                     .append(type.getSimpleName())
                     .append(" ")
-                    .append(DataBaseTools.toCamel(val[1]))
+                    .append(ConstTools.toCamel(val[1]))
                     .append(";\n\n");
         }
 
