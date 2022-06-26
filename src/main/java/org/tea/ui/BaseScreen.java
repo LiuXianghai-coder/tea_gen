@@ -26,6 +26,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 import static javax.swing.SwingConstants.LEFT;
@@ -137,9 +139,9 @@ public class BaseScreen {
                 String mapperDirText = mapperPack.getText();
                 String baseDirText = baseDir.getText();
 
-                TableInfoService infoService = null;
-                TableStructureService structureService = null;
-                GenClassService genClassService = null;
+                TableInfoService infoService;
+                TableStructureService structureService;
+                GenClassService genClassService;
 
                 if (da.equalsIgnoreCase("MySQL")) {
                     infoService = new MySQLTableInfoService();
@@ -159,45 +161,36 @@ public class BaseScreen {
                 String baseDirPack = pathToPack(baseDirText);
 
                 String dbName = url.substring(url.lastIndexOf("/") + 1);
+                List<SchemaStructure> dbTables = infoService.selectAllTables(dbName);
+                Pattern tabPat = Pattern.compile(tabName);
+                for (SchemaStructure struct : dbTables) {
+                    String tab = struct.getTableName();
+                    Matcher matcher = tabPat.matcher(tab);
+                    if (!matcher.find()) continue;
 
-                generateFiles(url, user, pass, da, tabName, path,
-                        entityDirText, xmlDirText, mapperDirText,
-                        structureService, genClassService, entityPack,
-                        mapperPack, xmlPack, baseDirPack, dbName, tabName
-                );
-            }
+                    List<TabStructure> structures = structureService.selectByTableName(dbName, tab);
+                    String entity = genClassService.genEntityByStruct(structures, entityPack);
+                    String xmlMapper = genClassService.genXmlMapperByStruct(
+                            structures,
+                            pathToPack(entityDirText) + toClassName(tab),
+                            pathToPack(mapperDirText) + toMapperName(tab)
+                    );
+                    String mapper = genClassService.genMapperByStruct(structures, mapperPack);
 
-            private void generateFiles(
-                    String url, String user,
-                    String pass, String da, String tabName,
-                    String path, String entityDirText,
-                    String xmlDirText, String mapperDirText,
-                    TableStructureService structureService, GenClassService genClassService,
-                    String entityPack, String mapperPack, String xmlPack,
-                    String baseDirPack, String dbName, String tab
-            ) {
-                List<TabStructure> structures = structureService.selectByTableName(dbName, tab);
-                String entity = genClassService.genEntityByStruct(structures, entityPack);
-                String xmlMapper = genClassService.genXmlMapperByStruct(
-                        structures,
-                        pathToPack(entityDirText) + toClassName(tab),
-                        pathToPack(mapperDirText) + toMapperName(tab)
-                );
-                String mapper = genClassService.genMapperByStruct(structures, mapperPack);
+                    FileTools.writeJavaToFile(entity, packToPath(baseDirPack) + packToPath(entityPack));
+                    FileTools.writeXmlMapper(xmlMapper, packToPath(baseDirPack) + pathToPack(xmlPack));
+                    FileTools.writeJavaToFile(mapper, packToPath(baseDirPack) + packToPath(mapperPack));
 
-                FileTools.writeJavaToFile(entity, packToPath(baseDirPack) + packToPath(entityPack));
-                FileTools.writeXmlMapper(xmlMapper, packToPath(baseDirPack) + pathToPack(xmlPack));
-                FileTools.writeJavaToFile(mapper, packToPath(baseDirPack) + packToPath(mapperPack));
+                    JOptionPane.showMessageDialog(mainFrame, "写入成功");
 
-                JOptionPane.showMessageDialog(mainFrame, "写入成功");
-
-                prop = PropertiesEntity.Builder.builder()
-                        .withUrl(url).withUserName(user).withPassword(pass)
-                        .withTableName(tabName).withFilePath(path)
-                        .withDaType(da).withEntityDir(entityDirText)
-                        .withXmlDir(xmlDirText).withMapperDir(mapperDirText)
-                        .build();
-                FileTools.writeProperties(prop);
+                    prop = PropertiesEntity.Builder.builder()
+                            .withUrl(url).withUserName(user).withPassword(pass)
+                            .withTableName(tabName).withFilePath(path)
+                            .withDaType(da).withEntityDir(entityDirText)
+                            .withXmlDir(xmlDirText).withMapperDir(mapperDirText)
+                            .build();
+                    FileTools.writeProperties(prop);
+                }
             }
         });
 
