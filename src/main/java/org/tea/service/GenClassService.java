@@ -1,5 +1,6 @@
 package org.tea.service;
 
+import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
 
 import java.util.List;
@@ -14,10 +15,11 @@ public interface GenClassService {
     /**
      * 通过查询到的表结构信息得到对应的实体类
      * @param structures    对应的表结构信息列表
+     * @param schema 当前对应的表
      * @param pack  生成的实体类所在的包
      * @return  生成的实体类源文件（以字符串表示）
      */
-    String genEntityByStruct(List<TabStructure> structures, String pack);
+    String genEntityByStruct(List<TabStructure> structures, SchemaStructure schema, String pack);
 
     /**
      * 通过相关的表结构，生成和 MyBatis 对应的 XML 映射文件

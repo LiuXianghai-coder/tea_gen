@@ -1,5 +1,4 @@
 rootProject.name = 'tea-gen'
-include 'application'
-include 'domain'
-include 'infrastructure'
+include 'application', 'domain', 'infrastructure'
+
 

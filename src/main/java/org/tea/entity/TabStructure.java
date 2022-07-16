@@ -41,4 +41,6 @@ public abstract class TabStructure {
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
+
+    public abstract String getColComment();
 }

@@ -232,4 +232,9 @@ public class MySQLSchemaStructure extends SchemaStructure {
     public void setTableComment(String tableComment) {
         this.tableComment = tableComment;
     }
+
+    @Override
+    public String getSchemaComment() {
+        return tableComment;
+    }
 }

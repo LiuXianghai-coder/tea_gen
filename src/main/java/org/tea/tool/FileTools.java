@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public class FileTools {
     private final static Logger log = LoggerFactory.getLogger(FileTools.class);
 
-    private static String CONFIG_PATH;
+    private static final String CONFIG_PATH;
 
     private final static int BUFFER_SIZE = 4 * 1024;
 
@@ -77,16 +77,20 @@ public class FileTools {
         writeToFile(srcFile, path, xmlName);
     }
 
-    private static void writeToFile(String srcFile, String path, String xmlName) {
-        File file = new File(path + "/" + xmlName);
+    private static void writeToFile(String srcFile, String path, String name) {
+        File file = new File(path + "/" + name);
+        File pf = new File(path);
         try {
-            if (!file.exists()) {
-                if (file.createNewFile()) {
-                    log.info("创建文件 {}", file.getName());
-                }
+            if (!pf.exists() && pf.mkdirs()) {
+                log.info("创建路径 {} 成功", path);
             }
+
+            if (!file.exists() && file.createNewFile()) {
+                log.info("创建文件 {}", file.getName());
+            }
+
             Files.writeString(Paths.get(file.toURI()), srcFile);
-            log.info("写入文件 {} 成功", xmlName);
+            log.info("写入文件 {} 成功", name);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

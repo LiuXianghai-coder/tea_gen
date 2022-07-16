@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 /**
  * MySQL 中的数据类型和 Java、JDBC 中对应的类型
@@ -35,8 +36,8 @@ public enum MySQLTypeEnum {
     DOUBLE_BOXED(Double.class, "DOUBLE", "DOUBLE"),
     DECIMAL(BigDecimal.class, "DECIMAL", "DECIMAL"),
     DATE(Date.class, "DATE", "DATE"),
-    DATETIME(Timestamp.class, "DATETIME", "DATETIME"),
-    TIMESTAMP(Timestamp.class, "TIMESTAMP", "TIMESTAMP"),
+    DATETIME(LocalDateTime.class, "DATETIME", "DATETIME"),
+    TIMESTAMP(LocalDateTime.class, "TIMESTAMP", "TIMESTAMP"),
     YEAR(Date.class, "YEAR", "YEAR"),
     CHAR(String.class, "CHAR", "CHAR"),
     VARCHAR(String.class, "VARCHAR", "VARCHAR"),

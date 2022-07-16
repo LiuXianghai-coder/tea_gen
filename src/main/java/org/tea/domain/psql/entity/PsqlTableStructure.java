@@ -441,6 +441,11 @@ public class PsqlTableStructure extends TabStructure {
         this.tableName = tableName;
     }
 
+    @Override
+    public String getColComment() {
+        return null;
+    }
+
     public String getColumnDefault() {
         return columnDefault;
     }

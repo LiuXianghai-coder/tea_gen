@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tea.domain.mysql.enums.MySQLTypeEnum;
 import org.tea.entity.AbstractGenClass;
+import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
+import org.tea.service.FacadeService;
 import org.tea.service.GenClassService;
 
 import java.util.List;
@@ -21,9 +23,13 @@ public class MySQLGenClassService
         implements GenClassService {
     private final static Logger log = LoggerFactory.getLogger(MySQLGenClassService.class);
 
+    public MySQLGenClassService(FacadeService facadeService) {
+        super(facadeService);
+    }
+
     @Override
-    public String genEntityByStruct(List<TabStructure> structures, String pack) {
-        StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, pack));
+    public String genEntityByStruct(List<TabStructure> structures, SchemaStructure schema, String pack) {
+        StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, schema, pack));
         for (TabStructure structure : structures) {
             Class<?> type = null;
             String dataType = structure.getDataType().toUpperCase();

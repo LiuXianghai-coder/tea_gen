@@ -2,12 +2,12 @@ package org.tea.domain.psql.service.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tea.domain.psql.entity.PsqlTableStructure;
 import org.tea.domain.psql.enums.PsqlTypeEnum;
 import org.tea.entity.AbstractGenClass;
+import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
+import org.tea.service.FacadeService;
 import org.tea.service.GenClassService;
-import org.tea.tool.DataBaseTools;
 
 import java.util.List;
 
@@ -23,9 +23,13 @@ public class PsqlGenClassService
         implements GenClassService {
     private final static Logger log = LoggerFactory.getLogger(PsqlGenClassService.class);
 
+    public PsqlGenClassService(FacadeService facadeService) {
+        super(facadeService);
+    }
+
     @Override
-    public String genEntityByStruct(List<TabStructure> structures, String pack) {
-        StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, pack));
+    public String genEntityByStruct(List<TabStructure> structures, SchemaStructure schema, String pack) {
+        StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, schema, pack));
 
         for (TabStructure structure : structures) {
             Class<?> type = null;
@@ -93,10 +97,6 @@ public class PsqlGenClassService
 
     @Override
     public String genJpaRepoByStruct(List<TabStructure> structures, String entity, String pack) {
-        StringBuilder sb = new StringBuilder();
-        if (structures.size() == 0) return sb.toString();
-        String tableName = structures.get(0).getTableName();
-
         return null;
     }
 }

@@ -19,4 +19,6 @@ public abstract class SchemaStructure {
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
+
+    public abstract String getSchemaComment();
 }

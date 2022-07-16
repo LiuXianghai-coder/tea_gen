@@ -128,4 +128,9 @@ public class PsqlSchemaStructure extends SchemaStructure {
     public void setCommitAction(String commitAction) {
         this.commitAction = commitAction;
     }
+
+    @Override
+    public String getSchemaComment() {
+        return null;
+    }
 }

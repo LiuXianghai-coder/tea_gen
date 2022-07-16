@@ -9,6 +9,7 @@ import org.tea.domain.psql.service.impl.PsqlTableStructService;
 import org.tea.entity.PropertiesEntity;
 import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
+import org.tea.service.FacadeService;
 import org.tea.service.GenClassService;
 import org.tea.service.TableInfoService;
 import org.tea.service.TableStructureService;
@@ -40,7 +41,7 @@ public class BaseScreen {
     private final int PRE_LAB_HIG = 3;
     private final int TEXT_COLS = 50;
 
-    private JTextField nameField, urlField, passField, tabField, fileField;
+    private JTextField nameField, urlField, passField, tabField;
 
     private JTextField entityPack, mapperPack, xmlPack;
 
@@ -84,7 +85,6 @@ public class BaseScreen {
         nameField.setText(prop.getUserName());
         passField.setText(prop.getPassword());
         tabField.setText(prop.getTableName());
-        fileField.setText(prop.getFilePath());
         entityPack.setText(prop.getEntityDir());
         xmlPack.setText(prop.getXmlDir());
         mapperPack.setText(prop.getMapperDir());
@@ -105,8 +105,6 @@ public class BaseScreen {
                 String user = nameField.getText();
                 String pass = passField.getText();
                 String da = daList.getSelectedValue();
-                String tabName = tabField.getText();
-                String path = fileField.getText();
 
                 boolean check = DataBaseTools.checkConnect(url, user, pass, da);
                 if (!check) {
@@ -115,13 +113,7 @@ public class BaseScreen {
                 }
 
                 JOptionPane.showMessageDialog(mainFrame, "连接成功");
-                prop = PropertiesEntity.Builder.builder()
-                        .withUrl(url).withUserName(user).withPassword(pass)
-                        .withTableName(tabName).withFilePath(path)
-                        .withDaType(da)
-                        .build();
-
-                FileTools.writeProperties(prop);
+                saveProps(); // 保存配置文件内容
             }
         });
 
@@ -129,11 +121,8 @@ public class BaseScreen {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String url = urlField.getText();
-                String user = nameField.getText();
-                String pass = passField.getText();
                 String da = daList.getSelectedValue();
                 String tabName = tabField.getText();
-                String path = fileField.getText();
                 String entityDirText = entityPack.getText();
                 String xmlDirText = xmlPack.getText();
                 String mapperDirText = mapperPack.getText();
@@ -146,11 +135,11 @@ public class BaseScreen {
                 if (da.equalsIgnoreCase("MySQL")) {
                     infoService = new MySQLTableInfoService();
                     structureService = new MySQLTableStructService();
-                    genClassService = new MySQLGenClassService();
+                    genClassService = new MySQLGenClassService(new FacadeService());
                 } else if (da.equalsIgnoreCase("PostgresSQL")) {
                     infoService = new PsqlTableInfoService();
                     structureService = new PsqlTableStructService();
-                    genClassService = new PsqlGenClassService();
+                    genClassService = new PsqlGenClassService(new FacadeService());
                 } else {
                     throw new RuntimeException("不能处理的数据库类型");
                 }
@@ -169,7 +158,7 @@ public class BaseScreen {
                     if (!matcher.find()) continue;
 
                     List<TabStructure> structures = structureService.selectByTableName(dbName, tab);
-                    String entity = genClassService.genEntityByStruct(structures, entityPack);
+                    String entity = genClassService.genEntityByStruct(structures, struct, entityPack);
                     String xmlMapper = genClassService.genXmlMapperByStruct(
                             structures,
                             pathToPack(entityDirText) + toClassName(tab),
@@ -177,24 +166,29 @@ public class BaseScreen {
                     );
                     String mapper = genClassService.genMapperByStruct(structures, mapperPack);
 
-                    FileTools.writeJavaToFile(entity, packToPath(baseDirPack) + packToPath(entityPack));
-                    FileTools.writeXmlMapper(xmlMapper, packToPath(baseDirPack) + pathToPack(xmlPack));
-                    FileTools.writeJavaToFile(mapper, packToPath(baseDirPack) + packToPath(mapperPack));
+                    FileTools.writeJavaToFile(entity, packToPath(baseDirPack));
+                    FileTools.writeXmlMapper(xmlMapper, packToPath(baseDirPack));
+                    FileTools.writeJavaToFile(mapper, packToPath(baseDirPack));
 
                     JOptionPane.showMessageDialog(mainFrame, "写入成功");
 
-                    prop = PropertiesEntity.Builder.builder()
-                            .withUrl(url).withUserName(user).withPassword(pass)
-                            .withTableName(tabName).withFilePath(path)
-                            .withDaType(da).withEntityDir(entityDirText)
-                            .withXmlDir(xmlDirText).withMapperDir(mapperDirText)
-                            .build();
-                    FileTools.writeProperties(prop);
+                    saveProps(); // 保存配置文件内容
                 }
             }
         });
 
         return bottom;
+    }
+
+    private void saveProps() {
+        prop = PropertiesEntity.Builder.builder()
+                .withUrl(urlField.getText()).withUserName(nameField.getText())
+                .withPassword(passField.getText()).withTableName(tabField.getText())
+                .withDaType(daList.getSelectedValue()).withEntityDir(entityPack.getText())
+                .withXmlDir(xmlPack.getText()).withMapperDir(mapperPack.getText())
+                .withBaseDir(baseDir.getText())
+                .build();
+        FileTools.writeProperties(prop);
     }
 
     private JPanel getCenterPanel() {
@@ -203,7 +197,6 @@ public class BaseScreen {
         JPanel passPanel = getPassPanel();
         JPanel typePanel = getTypePanel();
         JPanel tabPanel = getTabNamePanel();
-        JPanel filePanel = getFilePanel();
 
         JPanel center = new JPanel();
         center.add(urlPanel);
@@ -211,25 +204,12 @@ public class BaseScreen {
         center.add(passPanel);
         center.add(typePanel);
         center.add(tabPanel);
-        center.add(filePanel);
         center.add(getEntityPackPanel());
         center.add(getMapperPackPanel());
         center.add(getXmlPackPanel());
         center.add(getBaseDirPanel());
 
         return center;
-    }
-
-    private JPanel getFilePanel() {
-        JPanel jPanel = new JPanel();
-        JLabel tabLabel = new JLabel("filePath");
-        fileField = new JTextField(TEXT_COLS);
-        fileField.addActionListener(new PasteAction(fileField));
-
-        jPanel.add(tabLabel);
-        jPanel.add(fileField);
-
-        return jPanel;
     }
 
     private JPanel getTabNamePanel() {

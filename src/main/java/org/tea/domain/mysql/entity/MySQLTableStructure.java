@@ -216,4 +216,9 @@ public class MySQLTableStructure extends TabStructure {
     public void setTableSchema(String tableSchema) {
         this.tableSchema = tableSchema;
     }
+
+    @Override
+    public String getColComment() {
+        return columnComment;
+    }
 }
