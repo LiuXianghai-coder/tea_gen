@@ -1,5 +1,6 @@
 package org.tea.domain.psql.service.impl;
 
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tea.domain.psql.enums.PsqlTypeEnum;
@@ -10,6 +11,7 @@ import org.tea.service.FacadeService;
 import org.tea.service.GenClassService;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.tea.constant.CodeTemplate.RESULT_XML_TEMP;
 import static org.tea.constant.CodeTemplate.XML_TEMPLATE;
@@ -25,6 +27,16 @@ public class PsqlGenClassService
 
     public PsqlGenClassService(FacadeService facadeService) {
         super(facadeService);
+    }
+
+    @Override
+    protected Set<Class<?>> satisFieldTypes(List<TabStructure> struts) {
+        return Sets.newHashSet();
+    }
+
+    @Override
+    protected Class<?> findJavaType(TabStructure struct) {
+        return null;
     }
 
     @Override

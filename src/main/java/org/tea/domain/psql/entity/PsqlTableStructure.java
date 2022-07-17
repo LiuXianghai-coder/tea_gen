@@ -446,6 +446,11 @@ public class PsqlTableStructure extends TabStructure {
         return null;
     }
 
+    @Override
+    public boolean isPrimaryKey() {
+        return false;
+    }
+
     public String getColumnDefault() {
         return columnDefault;
     }

@@ -43,4 +43,6 @@ public abstract class TabStructure {
     }
 
     public abstract String getColComment();
+
+    public abstract boolean isPrimaryKey();
 }

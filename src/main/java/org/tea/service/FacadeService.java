@@ -1,5 +1,9 @@
 package org.tea.service;
 
+import org.tea.entity.TabStructure;
+
+import java.util.List;
+
 /**
  * "外观模式"，用于统一相关的服务接口
  *
@@ -8,7 +12,11 @@ package org.tea.service;
  */
 public class FacadeService implements CommentService {
 
-    private CommentService commentService;
+    private final CommentService commentService;
+
+    public FacadeService(CommentService commentService) {
+        this.commentService = commentService;
+    }
 
     @Override
     public String genComment(String content) {

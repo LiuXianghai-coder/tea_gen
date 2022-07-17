@@ -13,6 +13,6 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public String genComment(String content) {
-        return PRE + "\n" + "* " + content + "\n" + END;
+        return PRE + "\n" + "\t* " + content + "\n\t" + END;
     }
 }

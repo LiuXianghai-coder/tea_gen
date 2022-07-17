@@ -221,4 +221,9 @@ public class MySQLTableStructure extends TabStructure {
     public String getColComment() {
         return columnComment;
     }
+
+    @Override
+    public boolean isPrimaryKey() {
+        return this.columnKey != null && this.columnKey.contains("PRI");
+    }
 }

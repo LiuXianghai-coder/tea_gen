@@ -1,5 +1,6 @@
 package org.tea.domain.mysql.service.impl;
 
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tea.domain.mysql.enums.MySQLTypeEnum;
@@ -10,6 +11,7 @@ import org.tea.service.FacadeService;
 import org.tea.service.GenClassService;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.tea.constant.CodeTemplate.RESULT_XML_TEMP;
 import static org.tea.constant.CodeTemplate.XML_TEMPLATE;
@@ -28,28 +30,42 @@ public class MySQLGenClassService
     }
 
     @Override
+    protected Set<Class<?>> satisFieldTypes(List<TabStructure> struts) {
+        Set<Class<?>> res = Sets.newHashSet();
+        for (TabStructure structure : struts) {
+            Class<?> type = findJavaType(structure);
+            if (type != null) res.add(type);
+        }
+        return res;
+    }
+
+    protected Class<?> findJavaType(TabStructure structure) {
+        Class<?> type = null;
+        String dataType = structure.getDataType().toUpperCase();
+        for (MySQLTypeEnum typeEnum : MySQLTypeEnum.values()) {
+            if (dataType.startsWith(typeEnum.jdbcType) ||
+                    dataType.startsWith(typeEnum.dbType)) {
+                type = typeEnum.javaType;
+                break;
+            }
+        }
+        return type;
+    }
+
+    @Override
     public String genEntityByStruct(List<TabStructure> structures, SchemaStructure schema, String pack) {
         StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, schema, pack));
         for (TabStructure structure : structures) {
-            Class<?> type = null;
-            String dataType = structure.getDataType().toUpperCase();
-
-            for (MySQLTypeEnum typeEnum : MySQLTypeEnum.values()) {
-                if (dataType.startsWith(typeEnum.jdbcType) ||
-                        dataType.startsWith(typeEnum.dbType)) {
-                    type = typeEnum.javaType;
-                    break;
-                }
-            }
+            Class<?> type = findJavaType(structure);
 
             if (type == null) {
-                log.info("未知的类型：{}" + dataType);
+                log.info("未知的类型：{}" + structure.getDataType());
                 continue;
             }
 
             ans.append(genFieldColumn(structure, type));
         }
-
+        ans.append(genSetAndGet(structures));
         ans.append("}");
 
         return ans.toString();

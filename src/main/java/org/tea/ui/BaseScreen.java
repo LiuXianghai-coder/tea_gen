@@ -13,6 +13,7 @@ import org.tea.service.FacadeService;
 import org.tea.service.GenClassService;
 import org.tea.service.TableInfoService;
 import org.tea.service.TableStructureService;
+import org.tea.service.impl.CommentServiceImpl;
 import org.tea.tool.ConstTools;
 import org.tea.tool.DataBaseTools;
 import org.tea.tool.FileTools;
@@ -135,11 +136,11 @@ public class BaseScreen {
                 if (da.equalsIgnoreCase("MySQL")) {
                     infoService = new MySQLTableInfoService();
                     structureService = new MySQLTableStructService();
-                    genClassService = new MySQLGenClassService(new FacadeService());
+                    genClassService = new MySQLGenClassService(new FacadeService(new CommentServiceImpl()));
                 } else if (da.equalsIgnoreCase("PostgresSQL")) {
                     infoService = new PsqlTableInfoService();
                     structureService = new PsqlTableStructService();
-                    genClassService = new PsqlGenClassService(new FacadeService());
+                    genClassService = new PsqlGenClassService(new FacadeService(new CommentServiceImpl()));
                 } else {
                     throw new RuntimeException("不能处理的数据库类型");
                 }
