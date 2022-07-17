@@ -128,6 +128,19 @@ public abstract class AbstractGenClass {
         return sg.toString();
     }
 
+    private String genEquals(List<TabStructure> struts) {
+        return null;
+    }
+
+    private String genHashCode(List<TabStructure> structs) {
+        return null;
+    }
+
+    protected String genEqualsAndHashCode(List<TabStructure> structs) {
+        return genEquals(structs) + "\n" +
+                genHashCode(structs) + "\n";
+    }
+
     /**
      * 统计当前生成的类中，存在的不同的类型，使得能够生成对应的导入语句
      *

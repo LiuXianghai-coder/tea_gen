@@ -14,4 +14,8 @@ public class CodeTemplate {
             "<mapper namespace=\"#\">\n";
 
     public final static String RESULT_XML_TEMP = "\t<resultMap id=\"BaseResultMap\" type=\"#\">\n";
+
+    public final static String EQUALS_METHOD_TMP = "\t@Override\n\tpublic boolean equals(Object o) {\n"
+            + "\tif (this == o) return true;\n"
+            + "\tif (o == null || getClass() != o.getClass()) return false;";
 }
