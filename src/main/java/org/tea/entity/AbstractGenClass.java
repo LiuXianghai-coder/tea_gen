@@ -154,13 +154,7 @@ public abstract class AbstractGenClass {
                         .append(", ").append("obj.").append(fieldName).append(")");
             }
 
-            if (i != sz - 1) sb.append(" &&");
-
-            // 换行处理
-            int lastIdx = sb.lastIndexOf("&");
-            if (lastIdx < 0) continue;
-            int len = sb.subSequence(lastIdx, sb.length()).length();
-            if (len >= CH_NUMS) sb.append("\n");
+            if (i != sz - 1) sb.append(" &&\n\t\t\t\t");
         }
         sb.append(";\n\t}\n");
         return sb.toString();
