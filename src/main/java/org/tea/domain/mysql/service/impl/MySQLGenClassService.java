@@ -66,6 +66,7 @@ public class MySQLGenClassService
             ans.append(genFieldColumn(structure, type));
         }
         ans.append(genSetAndGet(structures));
+        ans.append(genEqualsAndHashCode(structures, schema));
         ans.append("}");
 
         return ans.toString();

@@ -1,5 +1,6 @@
 package org.tea.entity;
 
+import org.tea.constant.CodeTemplate;
 import org.tea.service.FacadeService;
 import org.tea.tool.ClassTools;
 import org.tea.tool.ConstTools;
@@ -30,9 +31,9 @@ public abstract class AbstractGenClass {
         ans.append("package ").append(pack)
                 .append("\n\n")
                 .append(genImports(structures)) // 相关类型需要的导入语句
-                .append("import javax.persistence.*;\n\n")
-                .append(facadeService.genComment(schema.getSchemaComment()))
+                .append("import javax.persistence.*;\n")
                 .append("\n")
+                .append("@Table(name=\"").append(schema.getTableName()).append("\")\n")
                 .append("public class ")
                 .append(toClassName(tableName))
                 .append(" { \n");
@@ -85,6 +86,7 @@ public abstract class AbstractGenClass {
             if (ClassTools.isBasicClass(clazz)) continue;
             sb.append("import ").append(clazz.getName()).append(";\n");
         }
+        sb.append("\nimport java.util.Objects;\n");
 
         return sb.toString();
     }
@@ -128,16 +130,53 @@ public abstract class AbstractGenClass {
         return sg.toString();
     }
 
-    private String genEquals(List<TabStructure> struts) {
-        return null;
+    /**
+     * 生成相关实体类对象的 equals 方法
+     */
+    private String genEquals(List<TabStructure> struts, SchemaStructure schema) {
+        StringBuilder sb = new StringBuilder(CodeTemplate.EQUALS_METHOD_TMP);
+        String clazzName = ConstTools.toClassName(schema.getTableName());
+        sb.append("\n\t\t").append(clazzName).append(" obj")
+                .append(" = ").append("(").append(clazzName).append(") ")
+                .append("o;\n\t\treturn ");
+        int sz = struts.size();
+        for (int i = 0; i < sz; ++i) {
+            TabStructure struct = struts.get(i);
+            Class<?> type = findJavaType(struct);
+            String fieldName = ConstTools.toCamel(struct.getColumnName());
+            if (type.isPrimitive()) {
+                sb.append(" ").append("this.").append(fieldName)
+                        .append(" == ").append("obj.").append(fieldName);
+            } else {
+                sb.append(" ").append("Objects.equals(").append("this.").append(fieldName)
+                        .append(", ").append("obj.").append(fieldName).append(")");
+            }
+
+            if (i != sz - 1) sb.append(" && ");
+        }
+        sb.append(";\n\t}\n");
+        return sb.toString();
     }
 
+    /**
+     * 生成相关实体类的 hashcode 方法
+     */
     private String genHashCode(List<TabStructure> structs) {
-        return null;
+        StringBuilder sb = new StringBuilder(CodeTemplate.HASH_CODE_TMP);
+        sb.append("\t\treturn Objects.hashCode(");
+        int sz = structs.size();
+        for (int i = 0; i < sz; ++i) {
+            TabStructure struct = structs.get(i);
+            String fieldName = ConstTools.toCamel(struct.getColumnName());
+            sb.append(fieldName);
+            if (i != sz - 1) sb.append(", ");
+        }
+        sb.append(");\n\t}\n");
+        return sb.toString();
     }
 
-    protected String genEqualsAndHashCode(List<TabStructure> structs) {
-        return genEquals(structs) + "\n" +
+    protected String genEqualsAndHashCode(List<TabStructure> structs, SchemaStructure schema) {
+        return genEquals(structs, schema) + "\n" +
                 genHashCode(structs) + "\n";
     }
 
