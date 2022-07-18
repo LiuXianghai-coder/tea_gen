@@ -82,7 +82,7 @@ public class MySQLGenClassService
         for (TabStructure structure : structures) {
             MySQLTypeEnum type = null;
 
-            String dataType = structure.getDataType();
+            String dataType = structure.getDataType().toUpperCase();
             for (MySQLTypeEnum typeEnum : MySQLTypeEnum.values()) {
                 if (dataType.startsWith(typeEnum.jdbcType) ||
                         dataType.startsWith(typeEnum.dbType)) {

@@ -18,6 +18,8 @@ public abstract class AbstractGenClass {
 
     private final FacadeService facadeService;
 
+    private final static int CH_NUMS = 60;
+
     protected AbstractGenClass(FacadeService facadeService) {
         this.facadeService = facadeService;
     }
@@ -152,7 +154,13 @@ public abstract class AbstractGenClass {
                         .append(", ").append("obj.").append(fieldName).append(")");
             }
 
-            if (i != sz - 1) sb.append(" && ");
+            if (i != sz - 1) sb.append(" &&");
+
+            // 换行处理
+            int lastIdx = sb.lastIndexOf("&");
+            if (lastIdx < 0) continue;
+            int len = sb.subSequence(lastIdx, sb.length()).length();
+            if (len >= CH_NUMS) sb.append("\n");
         }
         sb.append(";\n\t}\n");
         return sb.toString();
