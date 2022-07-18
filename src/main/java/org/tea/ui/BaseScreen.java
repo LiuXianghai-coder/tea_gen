@@ -147,8 +147,6 @@ public class BaseScreen {
 
                 String entityPack = pathToPack(entityDirText);
                 String mapperPack = pathToPack(mapperDirText);
-                String xmlPack = pathToPack(xmlDirText);
-                String baseDirPack = pathToPack(baseDirText);
 
                 String dbName = url.substring(url.lastIndexOf("/") + 1);
                 List<SchemaStructure> dbTables = infoService.selectAllTables(dbName);
@@ -159,17 +157,19 @@ public class BaseScreen {
                     if (!matcher.find()) continue;
 
                     List<TabStructure> structures = structureService.selectByTableName(dbName, tab);
-                    String entity = genClassService.genEntityByStruct(structures, struct, entityPack);
+                    String entity = genClassService.genEntityByStruct(structures, struct,
+                            entityPack.substring(0, entityPack.length() - 1) + ";");
                     String xmlMapper = genClassService.genXmlMapperByStruct(
                             structures,
                             pathToPack(entityDirText) + toClassName(tab),
                             pathToPack(mapperDirText) + toMapperName(tab)
                     );
-                    String mapper = genClassService.genMapperByStruct(structures, mapperPack);
+                    String mapper = genClassService.genMapperByStruct(structures,
+                            mapperPack.substring(0, mapperPack.length() - 1) + ";");
 
-                    FileTools.writeJavaToFile(entity, packToPath(baseDirPack));
-                    FileTools.writeXmlMapper(xmlMapper, packToPath(baseDirPack));
-                    FileTools.writeJavaToFile(mapper, packToPath(baseDirPack));
+                    FileTools.writeJavaToFile(entity, packToPath(baseDirText));
+                    FileTools.writeXmlMapper(xmlMapper, packToPath(baseDirText));
+                    FileTools.writeJavaToFile(mapper, packToPath(baseDirText));
 
                     JOptionPane.showMessageDialog(mainFrame, "写入成功");
 
