@@ -9,12 +9,11 @@ import org.tea.domain.psql.service.impl.PsqlTableStructService;
 import org.tea.entity.PropertiesEntity;
 import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
-import org.tea.service.FacadeService;
+import org.tea.service.impl.FacadeService;
 import org.tea.service.GenClassService;
 import org.tea.service.TableInfoService;
 import org.tea.service.TableStructureService;
 import org.tea.service.impl.CommentServiceImpl;
-import org.tea.tool.ConstTools;
 import org.tea.tool.DataBaseTools;
 import org.tea.tool.FileTools;
 
@@ -38,11 +37,11 @@ import static org.tea.tool.ConstTools.*;
 import static org.tea.tool.ConstTools.packToPath;
 
 public class BaseScreen {
-    private final int PRE_LAB_WID = 10;
-    private final int PRE_LAB_HIG = 3;
     private final int TEXT_COLS = 50;
 
     private JTextField nameField, urlField, passField, tabField;
+
+    private JTextField scField; // super class Field
 
     private JTextField entityPack, mapperPack, xmlPack;
 
@@ -90,6 +89,7 @@ public class BaseScreen {
         xmlPack.setText(prop.getXmlDir());
         mapperPack.setText(prop.getMapperDir());
         baseDir.setText(prop.getBaseDir());
+        scField.setText(prop.getSc());
     }
 
     private JPanel getBottom() {
@@ -125,22 +125,23 @@ public class BaseScreen {
                 String da = daList.getSelectedValue();
                 String tabName = tabField.getText();
                 String entityDirText = entityPack.getText();
-                String xmlDirText = xmlPack.getText();
                 String mapperDirText = mapperPack.getText();
                 String baseDirText = baseDir.getText();
+                String scFieldText = scField.getText();
 
                 TableInfoService infoService;
                 TableStructureService structureService;
                 GenClassService genClassService;
 
+                FacadeService facadeService = new FacadeService(new CommentServiceImpl());
                 if (da.equalsIgnoreCase("MySQL")) {
                     infoService = new MySQLTableInfoService();
-                    structureService = new MySQLTableStructService();
-                    genClassService = new MySQLGenClassService(new FacadeService(new CommentServiceImpl()));
+                    structureService = new MySQLTableStructService(facadeService);
+                    genClassService = new MySQLGenClassService(facadeService);
                 } else if (da.equalsIgnoreCase("PostgresSQL")) {
                     infoService = new PsqlTableInfoService();
                     structureService = new PsqlTableStructService();
-                    genClassService = new PsqlGenClassService(new FacadeService(new CommentServiceImpl()));
+                    genClassService = new PsqlGenClassService(facadeService);
                 } else {
                     throw new RuntimeException("不能处理的数据库类型");
                 }
@@ -151,14 +152,23 @@ public class BaseScreen {
                 String dbName = url.substring(url.lastIndexOf("/") + 1);
                 List<SchemaStructure> dbTables = infoService.selectAllTables(dbName);
                 Pattern tabPat = Pattern.compile(tabName);
+                Class<?> sc;
+                try {
+                    sc = Class.forName(scFieldText);
+                } catch (ClassNotFoundException ex) {
+                    throw new RuntimeException(ex);
+                }
+
                 for (SchemaStructure struct : dbTables) {
                     String tab = struct.getTableName();
                     Matcher matcher = tabPat.matcher(tab);
                     if (!matcher.find()) continue;
 
                     List<TabStructure> structures = structureService.selectByTableName(dbName, tab);
-                    String entity = genClassService.genEntityByStruct(structures, struct,
-                            entityPack.substring(0, entityPack.length() - 1) + ";");
+                    structures = structureService.filterColumns(structures, sc); // 过滤父类属性
+
+                    String entity = genClassService.genEntityByStruct(structures,
+                            entityPack.substring(0, entityPack.length() - 1) + ";", sc);
                     String xmlMapper = genClassService.genXmlMapperByStruct(
                             structures,
                             pathToPack(entityDirText) + toClassName(tab),
@@ -187,7 +197,7 @@ public class BaseScreen {
                 .withPassword(passField.getText()).withTableName(tabField.getText())
                 .withDaType(daList.getSelectedValue()).withEntityDir(entityPack.getText())
                 .withXmlDir(xmlPack.getText()).withMapperDir(mapperPack.getText())
-                .withBaseDir(baseDir.getText())
+                .withBaseDir(baseDir.getText()).withSc(scField.getText())
                 .build();
         FileTools.writeProperties(prop);
     }
@@ -198,6 +208,7 @@ public class BaseScreen {
         JPanel passPanel = getPassPanel();
         JPanel typePanel = getTypePanel();
         JPanel tabPanel = getTabNamePanel();
+        JPanel scPanel = getScFieldPanel();
 
         JPanel center = new JPanel();
         center.add(urlPanel);
@@ -205,6 +216,7 @@ public class BaseScreen {
         center.add(passPanel);
         center.add(typePanel);
         center.add(tabPanel);
+        center.add(scPanel);
         center.add(getEntityPackPanel());
         center.add(getMapperPackPanel());
         center.add(getXmlPackPanel());
@@ -221,6 +233,18 @@ public class BaseScreen {
 
         jPanel.add(tabLabel);
         jPanel.add(tabField);
+
+        return jPanel;
+    }
+
+    private JPanel getScFieldPanel() {
+        JPanel jPanel = new JPanel();
+        JLabel tabLabel = new JLabel("superClass");
+        scField = new JTextField(TEXT_COLS);
+        scField.addActionListener(new PasteAction(tabField));
+
+        jPanel.add(tabLabel);
+        jPanel.add(scField);
 
         return jPanel;
     }

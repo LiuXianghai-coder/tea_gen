@@ -22,4 +22,9 @@ public class PsqlTableStructService implements TableStructureService {
         List<PsqlTableStructure> structures = DataBaseTools.querySQL(sql, PsqlTableStructure.class);
         return new ArrayList<>(structures);
     }
+
+    @Override
+    public List<TabStructure> filterColumns(List<TabStructure> structs, Class<?> clazz) {
+        return null;
+    }
 }

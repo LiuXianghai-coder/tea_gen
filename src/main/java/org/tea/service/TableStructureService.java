@@ -20,4 +20,13 @@ public interface TableStructureService {
      * @return  查询到的表的结构信息列表
      */
     List<TabStructure> selectByTableName(String dbName, String tableName);
+
+    /**
+     * 过滤掉那些在父类中已经存在的相关属性
+     *
+     * @param structs   相关的列结构列表
+     * @param clazz 相关的直接父类
+     * @return  经过过滤之后的，待生成到目标实体类的列列表
+     */
+    List<TabStructure> filterColumns(List<TabStructure> structs, Class<?> clazz);
 }

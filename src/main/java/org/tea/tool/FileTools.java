@@ -23,7 +23,7 @@ public class FileTools {
 
     private final static int BUFFER_SIZE = 4 * 1024;
 
-    private final static Pattern FILE_NAME_REGX = Pattern.compile("([A-Z]\\w+)\\s?\\{");
+    private final static Pattern FILE_NAME_REGX = Pattern.compile("class\\s+([A-Z]\\w+)\\s+\\{");
 
     private final static Pattern XML_NAME_REGEX = Pattern.compile("namespace=\".+\\.(\\w+)\"");
 

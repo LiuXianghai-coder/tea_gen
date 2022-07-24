@@ -1,7 +1,7 @@
 package org.tea.entity;
 
 import org.tea.constant.CodeTemplate;
-import org.tea.service.FacadeService;
+import org.tea.service.impl.FacadeService;
 import org.tea.tool.ClassTools;
 import org.tea.tool.ConstTools;
 
@@ -18,13 +18,11 @@ public abstract class AbstractGenClass {
 
     private final FacadeService facadeService;
 
-    private final static int CH_NUMS = 60;
-
     protected AbstractGenClass(FacadeService facadeService) {
         this.facadeService = facadeService;
     }
 
-    protected String genCommonEntityHeader(List<TabStructure> structures, SchemaStructure schema, String pack) {
+    protected String genCommonEntityHeader(List<TabStructure> structures, String pack, Class<?> sc) {
         StringBuilder ans = new StringBuilder();
         String tableName;
         if (structures.size() == 0) return ans.toString();
@@ -33,11 +31,13 @@ public abstract class AbstractGenClass {
         ans.append("package ").append(pack)
                 .append("\n\n")
                 .append(genImports(structures)) // 相关类型需要的导入语句
+                .append(sc == null ? "" : "import " + sc.getName() + ";")
                 .append("import javax.persistence.*;\n")
                 .append("\n")
-                .append("@Table(name=\"").append(schema.getTableName()).append("\")\n")
+                .append("@Table(name=\"").append(tableName).append("\")\n")
                 .append("public class ")
                 .append(toClassName(tableName))
+                .append(sc == null ? "" : " extends " + sc.getSimpleName())
                 .append(" { \n");
 
         return ans.toString();
@@ -135,9 +135,11 @@ public abstract class AbstractGenClass {
     /**
      * 生成相关实体类对象的 equals 方法
      */
-    private String genEquals(List<TabStructure> struts, SchemaStructure schema) {
+    private String genEquals(List<TabStructure> struts) {
+        if (struts.isEmpty()) return "";
+
         StringBuilder sb = new StringBuilder(CodeTemplate.EQUALS_METHOD_TMP);
-        String clazzName = ConstTools.toClassName(schema.getTableName());
+        String clazzName = ConstTools.toClassName(struts.get(0).getTableName());
         sb.append("\n\t\t").append(clazzName).append(" obj")
                 .append(" = ").append("(").append(clazzName).append(") ")
                 .append("o;\n\t\treturn ");
@@ -177,8 +179,8 @@ public abstract class AbstractGenClass {
         return sb.toString();
     }
 
-    protected String genEqualsAndHashCode(List<TabStructure> structs, SchemaStructure schema) {
-        return genEquals(structs, schema) + "\n" +
+    protected String genEqualsAndHashCode(List<TabStructure> structs) {
+        return genEquals(structs) + "\n" +
                 genHashCode(structs) + "\n";
     }
 
