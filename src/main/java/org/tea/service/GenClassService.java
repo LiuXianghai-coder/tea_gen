@@ -35,9 +35,10 @@ public interface GenClassService {
      *
      * @param structures 相关的表结构
      * @param pack  该 Mapper 最后所在的包
+     * @param sc 当前 Mapper 接口对应的父类
      * @return  生成的 Mapper 源文件
      */
-    String genMapperByStruct(List<TabStructure> structures, String pack);
+    String genMapperByStruct(List<TabStructure> structures, String pack, Class<?> sc);
 
     /**
      * 通过相关的表结构来生成和 JPA 中对应的 Repo 接口

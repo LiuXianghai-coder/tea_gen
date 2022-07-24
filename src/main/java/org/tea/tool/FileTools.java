@@ -23,7 +23,9 @@ public class FileTools {
 
     private final static int BUFFER_SIZE = 4 * 1024;
 
-    private final static Pattern FILE_NAME_REGX = Pattern.compile("class\\s+([A-Z]\\w+)\\s+\\{");
+    private final static Pattern CLASS_NAME_REGX = Pattern.compile("class\\s+([A-Z]\\w+)\\s+");
+
+    private final static Pattern MAPPER_NAME_REGX = Pattern.compile("interface\\s+([A-Z]\\w+)\\s+");
 
     private final static Pattern XML_NAME_REGEX = Pattern.compile("namespace=\".+\\.(\\w+)\"");
 
@@ -44,15 +46,31 @@ public class FileTools {
     }
 
     /**
-     * 将生成的 Java 源文件代码写入到指定的路径中，这里的路径指的是绝对路径
+     * 将生成的 Java 实体类源文件代码写入到指定的路径中，这里的路径指的是绝对路径
      *
      * @param srcFile 生成的源文件的具体内容
      * @param path    写入的路径
      */
-    public static void writeJavaToFile(String srcFile, String path) {
-        Matcher matcher = FILE_NAME_REGX.matcher(srcFile);
+    public static void writeEntityToFile(String srcFile, String path) {
+        Matcher matcher = CLASS_NAME_REGX.matcher(srcFile);
         if (!matcher.find()) {
-            log.info("无法匹配到对应的文件名，本次写入失败");
+            log.info("无法匹配到对应的实体类文件名，本次写入失败");
+            return;
+        }
+
+        String cname = matcher.group(1).concat(".java");
+        writeToFile(srcFile, path, cname);
+    }
+
+    /**
+     * 解析生成的 Mapper 接口源文件名，同时写入到文件中
+     * @param srcFile   Mapper 源文件的字符串表现形式
+     * @param path  写入文件的绝对路径
+     */
+    public static void writeMapperToFile(String srcFile, String path) {
+        Matcher matcher = MAPPER_NAME_REGX.matcher(srcFile);
+        if (!matcher.find()) {
+            log.info("无法匹配到对应的 Mapper 文件名，本次写入失败");
             return;
         }
 

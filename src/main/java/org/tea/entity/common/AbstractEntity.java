@@ -18,6 +18,12 @@ public abstract class AbstractEntity {
     @Column(name="create_time")
     private Date createTime;
 
+    @Column(name="update_time")
+    private Date updateTime;
+
+    @Column(name="update_user")
+    private String updateUser;
+
     public long getDel() {
         return del;
     }
@@ -40,5 +46,21 @@ public abstract class AbstractEntity {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public String getUpdateUser() {
+        return updateUser;
+    }
+
+    public void setUpdateUser(String updateUser) {
+        this.updateUser = updateUser;
     }
 }

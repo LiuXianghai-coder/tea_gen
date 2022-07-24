@@ -1,7 +1,6 @@
 package org.tea.domain.mysql;
 
 import com.google.common.collect.Sets;
-import org.tea.annotation.Column;
 import org.tea.domain.mysql.enums.MySQLTypeEnum;
 import org.tea.entity.AbstractGenClass;
 import org.tea.entity.TabStructure;
@@ -49,22 +48,5 @@ public abstract class AbstractMySQLService extends AbstractGenClass
             }
         }
         return type;
-    }
-
-    @Override
-    public boolean willGen(TabStructure struct, Class<?> sc) {
-        List<Field> fields = ClassTools.listAllFields(sc);
-        for (Field field : fields) {
-            String fieldName = field.getName();
-            Class<?> fieldType = field.getType();
-
-            String tarName = ConstTools.toCamel(struct.getColumnName());
-            Class<?> tarType = findJavaType(struct);
-
-            // 父类已经存在相关的属性，跳过后续的处理
-            if (fieldName.equals(tarName) && tarType == fieldType) return false;
-        }
-
-        return true;
     }
 }

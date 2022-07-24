@@ -41,7 +41,7 @@ public class BaseScreen {
 
     private JTextField nameField, urlField, passField, tabField;
 
-    private JTextField scField; // super class Field
+    private JTextField scField, scMapper; // super class Field
 
     private JTextField entityPack, mapperPack, xmlPack;
 
@@ -90,6 +90,7 @@ public class BaseScreen {
         mapperPack.setText(prop.getMapperDir());
         baseDir.setText(prop.getBaseDir());
         scField.setText(prop.getSc());
+        scMapper.setText(prop.getSm());
     }
 
     private JPanel getBottom() {
@@ -128,6 +129,7 @@ public class BaseScreen {
                 String mapperDirText = mapperPack.getText();
                 String baseDirText = baseDir.getText();
                 String scFieldText = scField.getText();
+                String smText = scMapper.getText();
 
                 TableInfoService infoService;
                 TableStructureService structureService;
@@ -152,9 +154,14 @@ public class BaseScreen {
                 String dbName = url.substring(url.lastIndexOf("/") + 1);
                 List<SchemaStructure> dbTables = infoService.selectAllTables(dbName);
                 Pattern tabPat = Pattern.compile(tabName);
-                Class<?> sc;
+                Class<?> sc = null, sm = null;
                 try {
-                    sc = Class.forName(scFieldText);
+                    if (scFieldText != null && scFieldText.trim().length() != 0) {
+                        sc = Class.forName(scFieldText);
+                    }
+                    if (smText != null && smText.trim().length() != 0) {
+                        sm = Class.forName(smText);
+                    }
                 } catch (ClassNotFoundException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -165,7 +172,6 @@ public class BaseScreen {
                     if (!matcher.find()) continue;
 
                     List<TabStructure> structures = structureService.selectByTableName(dbName, tab);
-                    structures = structureService.filterColumns(structures, sc); // 过滤父类属性
 
                     String entity = genClassService.genEntityByStruct(structures,
                             entityPack.substring(0, entityPack.length() - 1) + ";", sc);
@@ -175,11 +181,11 @@ public class BaseScreen {
                             pathToPack(mapperDirText) + toMapperName(tab)
                     );
                     String mapper = genClassService.genMapperByStruct(structures,
-                            mapperPack.substring(0, mapperPack.length() - 1) + ";");
+                            mapperPack.substring(0, mapperPack.length() - 1) + ";", sm);
 
-                    FileTools.writeJavaToFile(entity, packToPath(baseDirText));
+                    FileTools.writeEntityToFile(entity, packToPath(baseDirText));
                     FileTools.writeXmlMapper(xmlMapper, packToPath(baseDirText));
-                    FileTools.writeJavaToFile(mapper, packToPath(baseDirText));
+                    FileTools.writeMapperToFile(mapper, packToPath(baseDirText));
 
                     JOptionPane.showMessageDialog(mainFrame, "写入成功");
 
@@ -197,7 +203,7 @@ public class BaseScreen {
                 .withPassword(passField.getText()).withTableName(tabField.getText())
                 .withDaType(daList.getSelectedValue()).withEntityDir(entityPack.getText())
                 .withXmlDir(xmlPack.getText()).withMapperDir(mapperPack.getText())
-                .withBaseDir(baseDir.getText()).withSc(scField.getText())
+                .withBaseDir(baseDir.getText()).withSc(scField.getText()).withSm(scMapper.getText())
                 .build();
         FileTools.writeProperties(prop);
     }
@@ -209,6 +215,7 @@ public class BaseScreen {
         JPanel typePanel = getTypePanel();
         JPanel tabPanel = getTabNamePanel();
         JPanel scPanel = getScFieldPanel();
+        JPanel smPanel = getScMapperPanel();
 
         JPanel center = new JPanel();
         center.add(urlPanel);
@@ -216,9 +223,10 @@ public class BaseScreen {
         center.add(passPanel);
         center.add(typePanel);
         center.add(tabPanel);
-        center.add(scPanel);
         center.add(getEntityPackPanel());
+        center.add(scPanel);
         center.add(getMapperPackPanel());
+        center.add(smPanel);
         center.add(getXmlPackPanel());
         center.add(getBaseDirPanel());
 
@@ -245,6 +253,18 @@ public class BaseScreen {
 
         jPanel.add(tabLabel);
         jPanel.add(scField);
+
+        return jPanel;
+    }
+
+    private JPanel getScMapperPanel() {
+        JPanel jPanel = new JPanel();
+        JLabel tabLabel = new JLabel("superMapper");
+        scMapper = new JTextField(TEXT_COLS);
+        scMapper.addActionListener(new PasteAction(tabField));
+
+        jPanel.add(tabLabel);
+        jPanel.add(scMapper);
 
         return jPanel;
     }

@@ -4,12 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tea.domain.mysql.AbstractMySQLService;
 import org.tea.domain.mysql.enums.MySQLTypeEnum;
-import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
-import org.tea.service.impl.FacadeService;
 import org.tea.service.GenClassService;
+import org.tea.service.impl.FacadeService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.tea.constant.CodeTemplate.RESULT_XML_TEMP;
 import static org.tea.constant.CodeTemplate.XML_TEMPLATE;
@@ -29,6 +29,8 @@ public class MySQLGenClassService extends AbstractMySQLService
     @Override
     public String genEntityByStruct(List<TabStructure> structures, String pack, Class<?> sc) {
         StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, pack, sc));
+        structures = structures.stream().filter(obj -> willGen(obj, sc))
+                .collect(Collectors.toList()); // 过滤父类属性
         for (TabStructure structure : structures) {
             Class<?> type = findJavaType(structure);
 
@@ -36,7 +38,6 @@ public class MySQLGenClassService extends AbstractMySQLService
                 log.info("未知的类型：{}" + structure.getDataType());
                 continue;
             }
-
             ans.append(genFieldColumn(structure, type));
         }
         ans.append(genSetAndGet(structures));
@@ -78,11 +79,11 @@ public class MySQLGenClassService extends AbstractMySQLService
     }
 
     @Override
-    public String genMapperByStruct(List<TabStructure> structures, String pack) {
+    public String genMapperByStruct(List<TabStructure> structures, String pack, Class<?> sc) {
         StringBuilder sb = new StringBuilder();
         if (structures.size() == 0) return sb.toString();
         String tableName = structures.get(0).getTableName();
-        sb.append(genMapperInterface(pack, tableName));
+        sb.append(genMapperInterface(pack, tableName, sc));
 
         return sb.toString();
     }

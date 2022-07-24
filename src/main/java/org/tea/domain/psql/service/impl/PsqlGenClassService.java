@@ -98,11 +98,11 @@ public class PsqlGenClassService
     }
 
     @Override
-    public String genMapperByStruct(List<TabStructure> structures, String pack) {
+    public String genMapperByStruct(List<TabStructure> structures, String pack, Class<?> sc) {
         StringBuilder sb = new StringBuilder();
         if (structures.size() == 0) return sb.toString();
         String tableName = structures.get(0).getTableName();
-        sb.append(genMapperInterface(pack, tableName));
+        sb.append(genMapperInterface(pack, tableName, sc));
 
         return sb.toString();
     }

@@ -2,6 +2,7 @@ package org.tea.service.impl;
 
 import org.tea.entity.TabStructure;
 import org.tea.service.CommentService;
+import org.tea.service.SuperClassService;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ import java.util.List;
  * @author lxh
  * @date 2022/7/16-下午10:20
  */
-public class FacadeService implements CommentService {
+public class FacadeService implements CommentService, SuperClassService {
 
     private final CommentService commentService;
 
@@ -22,5 +23,10 @@ public class FacadeService implements CommentService {
     @Override
     public String genComment(String content) {
         return commentService.genComment(content);
+    }
+
+    @Override
+    public boolean willGen(TabStructure struct, Class<?> sc) {
+        return false;
     }
 }
