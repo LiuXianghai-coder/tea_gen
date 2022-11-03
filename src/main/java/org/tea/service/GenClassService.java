@@ -15,11 +15,11 @@ public interface GenClassService {
     /**
      * 通过查询到的表结构信息得到对应的实体类
      * @param structures    对应的表结构信息列表
-     * @param schema 当前对应的表
      * @param pack  生成的实体类所在的包
+     * @param sc 生成的实体类的父类
      * @return  生成的实体类源文件（以字符串表示）
      */
-    String genEntityByStruct(List<TabStructure> structures, SchemaStructure schema, String pack);
+    String genEntityByStruct(List<TabStructure> structures, String pack, Class<?> sc);
 
     /**
      * 通过相关的表结构，生成和 MyBatis 对应的 XML 映射文件
@@ -35,9 +35,10 @@ public interface GenClassService {
      *
      * @param structures 相关的表结构
      * @param pack  该 Mapper 最后所在的包
+     * @param sc 当前 Mapper 接口对应的父类
      * @return  生成的 Mapper 源文件
      */
-    String genMapperByStruct(List<TabStructure> structures, String pack);
+    String genMapperByStruct(List<TabStructure> structures, String pack, Class<?> sc);
 
     /**
      * 通过相关的表结构来生成和 JPA 中对应的 Repo 接口

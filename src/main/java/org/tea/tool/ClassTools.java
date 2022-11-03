@@ -1,8 +1,13 @@
 package org.tea.tool;
 
+import com.google.common.collect.Lists;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,5 +50,26 @@ public class ClassTools {
         int lastIdx = name.lastIndexOf(".");
         String pack = name.substring(0, lastIdx);
         return pack.equals("java.lang");
+    }
+
+    /**
+     * 列出相关类的所有属性，包括父类属性
+     * @param clazz 相关的类对象
+     * @return 当前类包含的所有属性
+     */
+    public static List<Field> listAllFields(Class<?> clazz) {
+        List<Field> ans = Lists.newArrayList();
+        return listAllFields(ans, clazz);
+    }
+
+    public static List<Field> listAllFields(List<Field> list, Class<?> clazz) {
+        if (clazz == null) return list;
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if ((field.getModifiers() & Modifier.STATIC) != 0) continue;
+            list.add(field);
+        }
+
+        return listAllFields(list, clazz.getSuperclass());
     }
 }

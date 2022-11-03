@@ -1,17 +1,15 @@
 package org.tea.domain.mysql.service.impl;
 
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tea.domain.mysql.AbstractMySQLService;
 import org.tea.domain.mysql.enums.MySQLTypeEnum;
-import org.tea.entity.AbstractGenClass;
-import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
-import org.tea.service.FacadeService;
 import org.tea.service.GenClassService;
+import org.tea.service.impl.FacadeService;
 
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.tea.constant.CodeTemplate.RESULT_XML_TEMP;
 import static org.tea.constant.CodeTemplate.XML_TEMPLATE;
@@ -20,8 +18,7 @@ import static org.tea.constant.CodeTemplate.XML_TEMPLATE;
  * @author lxh
  * @date 2022/6/5-下午9:21
  */
-public class MySQLGenClassService
-        extends AbstractGenClass
+public class MySQLGenClassService extends AbstractMySQLService
         implements GenClassService {
     private final static Logger log = LoggerFactory.getLogger(MySQLGenClassService.class);
 
@@ -30,31 +27,10 @@ public class MySQLGenClassService
     }
 
     @Override
-    protected Set<Class<?>> satisFieldTypes(List<TabStructure> struts) {
-        Set<Class<?>> res = Sets.newHashSet();
-        for (TabStructure structure : struts) {
-            Class<?> type = findJavaType(structure);
-            if (type != null) res.add(type);
-        }
-        return res;
-    }
-
-    protected Class<?> findJavaType(TabStructure structure) {
-        Class<?> type = null;
-        String dataType = structure.getDataType().toUpperCase();
-        for (MySQLTypeEnum typeEnum : MySQLTypeEnum.values()) {
-            if (dataType.startsWith(typeEnum.jdbcType) ||
-                    dataType.startsWith(typeEnum.dbType)) {
-                type = typeEnum.javaType;
-                break;
-            }
-        }
-        return type;
-    }
-
-    @Override
-    public String genEntityByStruct(List<TabStructure> structures, SchemaStructure schema, String pack) {
-        StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, schema, pack));
+    public String genEntityByStruct(List<TabStructure> structures, String pack, Class<?> sc) {
+        StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, pack, sc));
+        structures = structures.stream().filter(obj -> willGen(obj, sc))
+                .collect(Collectors.toList()); // 过滤父类属性
         for (TabStructure structure : structures) {
             Class<?> type = findJavaType(structure);
 
@@ -62,11 +38,10 @@ public class MySQLGenClassService
                 log.info("未知的类型：{}" + structure.getDataType());
                 continue;
             }
-
             ans.append(genFieldColumn(structure, type));
         }
         ans.append(genSetAndGet(structures));
-        ans.append(genEqualsAndHashCode(structures, schema));
+        ans.append(genEqualsAndHashCode(structures));
         ans.append("}");
 
         return ans.toString();
@@ -104,11 +79,11 @@ public class MySQLGenClassService
     }
 
     @Override
-    public String genMapperByStruct(List<TabStructure> structures, String pack) {
+    public String genMapperByStruct(List<TabStructure> structures, String pack, Class<?> sc) {
         StringBuilder sb = new StringBuilder();
         if (structures.size() == 0) return sb.toString();
         String tableName = structures.get(0).getTableName();
-        sb.append(genMapperInterface(pack, tableName));
+        sb.append(genMapperInterface(pack, tableName, sc));
 
         return sb.toString();
     }

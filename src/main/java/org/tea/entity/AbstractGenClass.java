@@ -1,12 +1,15 @@
 package org.tea.entity;
 
 import org.tea.constant.CodeTemplate;
-import org.tea.service.FacadeService;
+import org.tea.service.SuperClassService;
+import org.tea.service.impl.FacadeService;
 import org.tea.tool.ClassTools;
 import org.tea.tool.ConstTools;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.tea.tool.ConstTools.*;
 
@@ -14,17 +17,15 @@ import static org.tea.tool.ConstTools.*;
  * @author lxh
  * @date 2022/6/5-下午9:44
  */
-public abstract class AbstractGenClass {
+public abstract class AbstractGenClass implements SuperClassService {
 
     private final FacadeService facadeService;
-
-    private final static int CH_NUMS = 60;
 
     protected AbstractGenClass(FacadeService facadeService) {
         this.facadeService = facadeService;
     }
 
-    protected String genCommonEntityHeader(List<TabStructure> structures, SchemaStructure schema, String pack) {
+    protected String genCommonEntityHeader(List<TabStructure> structures, String pack, Class<?> sc) {
         StringBuilder ans = new StringBuilder();
         String tableName;
         if (structures.size() == 0) return ans.toString();
@@ -32,12 +33,14 @@ public abstract class AbstractGenClass {
 
         ans.append("package ").append(pack)
                 .append("\n\n")
+                .append(sc == null ? "" : "import " + sc.getName() + ";\n")
                 .append(genImports(structures)) // 相关类型需要的导入语句
                 .append("import javax.persistence.*;\n")
                 .append("\n")
-                .append("@Table(name=\"").append(schema.getTableName()).append("\")\n")
+                .append("@Table(name=\"").append(tableName).append("\")\n")
                 .append("public class ")
                 .append(toClassName(tableName))
+                .append(sc == null ? "" : " extends " + sc.getSimpleName())
                 .append(" { \n");
 
         return ans.toString();
@@ -66,13 +69,11 @@ public abstract class AbstractGenClass {
                 "\" />\n";
     }
 
-    protected String genMapperInterface(String pack, String tableName) {
-        return "package " + pack +
-                "\n\n" +
-                "public interface " +
-                toClassName(tableName) +
-                "Mapper" +
-                " {\n" + "}";
+    protected String genMapperInterface(String pack, String tableName, Class<?> sc) {
+        return "package " + pack + "\n\n" +
+                (sc == null ? "" : "import " + sc.getName() + ";\n") +
+                "public interface " + toClassName(tableName) + "Mapper" +
+                (sc == null ? "" : sc.getSimpleName()) + " {\n" + "}";
     }
 
     /**
@@ -135,9 +136,11 @@ public abstract class AbstractGenClass {
     /**
      * 生成相关实体类对象的 equals 方法
      */
-    private String genEquals(List<TabStructure> struts, SchemaStructure schema) {
+    private String genEquals(List<TabStructure> struts) {
+        if (struts.isEmpty()) return "";
+
         StringBuilder sb = new StringBuilder(CodeTemplate.EQUALS_METHOD_TMP);
-        String clazzName = ConstTools.toClassName(schema.getTableName());
+        String clazzName = ConstTools.toClassName(struts.get(0).getTableName());
         sb.append("\n\t\t").append(clazzName).append(" obj")
                 .append(" = ").append("(").append(clazzName).append(") ")
                 .append("o;\n\t\treturn ");
@@ -167,18 +170,19 @@ public abstract class AbstractGenClass {
         StringBuilder sb = new StringBuilder(CodeTemplate.HASH_CODE_TMP);
         sb.append("\t\treturn Objects.hashCode(");
         int sz = structs.size();
-        for (int i = 0; i < sz; ++i) {
+        for (int i = 0, j = 1; i < sz; ++i, ++j) {
             TabStructure struct = structs.get(i);
             String fieldName = ConstTools.toCamel(struct.getColumnName());
             sb.append(fieldName);
             if (i != sz - 1) sb.append(", ");
+            if (j % 8 == 0) sb.append("\n\t\t\t\t");
         }
         sb.append(");\n\t}\n");
         return sb.toString();
     }
 
-    protected String genEqualsAndHashCode(List<TabStructure> structs, SchemaStructure schema) {
-        return genEquals(structs, schema) + "\n" +
+    protected String genEqualsAndHashCode(List<TabStructure> structs) {
+        return genEquals(structs) + "\n" +
                 genHashCode(structs) + "\n";
     }
 
@@ -197,4 +201,21 @@ public abstract class AbstractGenClass {
      * @return 对应的 Java 类型
      */
     protected abstract Class<?> findJavaType(TabStructure struct);
+
+    @Override
+    public boolean willGen(TabStructure struct, Class<?> sc) {
+        List<Field> fields = ClassTools.listAllFields(sc);
+
+        String tarName = ConstTools.toCamel(struct.getColumnName());
+        Class<?> tarType = findJavaType(struct);
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            Class<?> fieldType = field.getType();
+
+            // 父类已经存在相关的属性，跳过后续的处理
+            if (fieldName.equals(tarName) && tarType == fieldType) return false;
+        }
+
+        return true;
+    }
 }

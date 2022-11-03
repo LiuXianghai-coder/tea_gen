@@ -7,7 +7,7 @@ import org.tea.domain.psql.enums.PsqlTypeEnum;
 import org.tea.entity.AbstractGenClass;
 import org.tea.entity.SchemaStructure;
 import org.tea.entity.TabStructure;
-import org.tea.service.FacadeService;
+import org.tea.service.impl.FacadeService;
 import org.tea.service.GenClassService;
 
 import java.util.List;
@@ -40,8 +40,8 @@ public class PsqlGenClassService
     }
 
     @Override
-    public String genEntityByStruct(List<TabStructure> structures, SchemaStructure schema, String pack) {
-        StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, schema, pack));
+    public String genEntityByStruct(List<TabStructure> structures, String pack, Class<?> sc) {
+        StringBuilder ans = new StringBuilder(genCommonEntityHeader(structures, pack, sc));
 
         for (TabStructure structure : structures) {
             Class<?> type = null;
@@ -98,11 +98,11 @@ public class PsqlGenClassService
     }
 
     @Override
-    public String genMapperByStruct(List<TabStructure> structures, String pack) {
+    public String genMapperByStruct(List<TabStructure> structures, String pack, Class<?> sc) {
         StringBuilder sb = new StringBuilder();
         if (structures.size() == 0) return sb.toString();
         String tableName = structures.get(0).getTableName();
-        sb.append(genMapperInterface(pack, tableName));
+        sb.append(genMapperInterface(pack, tableName, sc));
 
         return sb.toString();
     }
