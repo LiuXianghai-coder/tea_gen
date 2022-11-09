@@ -5,4 +5,8 @@ package org.tea.infrastructure.context;
  */
 public abstract class AbstractApplicationContext
         implements ConfigurableApplicationContext {
+
+    public void refresh() {
+
+    }
 }
