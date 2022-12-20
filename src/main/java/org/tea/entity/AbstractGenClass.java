@@ -9,13 +9,12 @@ import org.tea.tool.ConstTools;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import static org.tea.tool.ConstTools.*;
+import static org.tea.tool.ConstTools.toCamel;
+import static org.tea.tool.ConstTools.toClassName;
 
 /**
  * @author lxh
- * @date 2022/6/5-下午9:44
  */
 public abstract class AbstractGenClass implements SuperClassService {
 
@@ -101,7 +100,7 @@ public abstract class AbstractGenClass implements SuperClassService {
         StringBuilder ans = new StringBuilder("\tpublic ");
         Class<?> type = findJavaType(struct);
         ans.append(type.getSimpleName());
-        String mn = "get" + toClassName(struct.getColumnName());
+        String mn = facadeService.genGetter(toClassName(struct.getColumnName()));
         ans.append(" ").append(mn).append("()").append("{\n");
         ans.append("\t\treturn ").append("this.")
                 .append(ConstTools.toCamel(struct.getColumnName()))
@@ -115,7 +114,7 @@ public abstract class AbstractGenClass implements SuperClassService {
     private String genSetter(TabStructure struct) {
         StringBuilder ans = new StringBuilder("\tpublic void ");
         Class<?> type = findJavaType(struct);
-        String mn = "set" + toClassName(struct.getColumnName());
+        String mn = facadeService.genGetter(toClassName(struct.getColumnName()));
         String vn = toCamel(struct.getColumnName());
         ans.append(mn).append("(").append(type.getSimpleName())
                 .append(" ").append(vn).append(") {\n")
